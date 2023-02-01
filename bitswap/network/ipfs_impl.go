@@ -11,17 +11,17 @@ import (
 	bsmsg "github.com/ipfs/go-libipfs/bitswap/message"
 	"github.com/ipfs/go-libipfs/bitswap/network/internal"
 
-	cid "github.com/ipfs/go-cid"
+	"github.com/ipfs/go-cid"
 	logging "github.com/ipfs/go-log"
 	"github.com/libp2p/go-libp2p/core/connmgr"
 	"github.com/libp2p/go-libp2p/core/host"
 	"github.com/libp2p/go-libp2p/core/network"
 	"github.com/libp2p/go-libp2p/core/peer"
-	peerstore "github.com/libp2p/go-libp2p/core/peerstore"
+	"github.com/libp2p/go-libp2p/core/peerstore"
 	"github.com/libp2p/go-libp2p/core/protocol"
 	"github.com/libp2p/go-libp2p/core/routing"
 	"github.com/libp2p/go-libp2p/p2p/protocol/ping"
-	msgio "github.com/libp2p/go-msgio"
+	"github.com/libp2p/go-msgio"
 	ma "github.com/multiformats/go-multiaddr"
 	"github.com/multiformats/go-multistream"
 )
@@ -165,7 +165,7 @@ func (s *streamMessageSender) multiAttempt(ctx context.Context, fn func() error)
 		}
 
 		// Protocol is not supported, so no need to try multiple times
-		if errors.Is(err, multistream.ErrNotSupported) {
+		if errors.Is(err, multistream.ErrNotSupported[protocol.ID]{}) {
 			s.bsnet.connectEvtMgr.MarkUnresponsive(s.to)
 			return err
 		}
