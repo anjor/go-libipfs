@@ -36,7 +36,7 @@ func (i *handler) serveUnixFS(ctx context.Context, w http.ResponseWriter, r *htt
 	// Handling Unixfs directory
 	dir, ok := dr.(files.Directory)
 	if !ok {
-		internalWebError(w, fmt.Errorf("unsupported UnixFS type"))
+		serverWebError(w, fmt.Errorf("unsupported UnixFS type"))
 		return false
 	}
 

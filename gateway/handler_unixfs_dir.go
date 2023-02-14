@@ -65,13 +65,13 @@ func (i *handler) serveDirectory(ctx context.Context, w http.ResponseWriter, r *
 	case nil:
 		idx, err := i.api.GetUnixFsNode(ctx, idxResolvedPath)
 		if err != nil {
-			internalWebError(w, err)
+			serverWebError(w, err)
 			return
 		}
 
 		f, ok := idx.(files.File)
 		if !ok {
-			internalWebError(w, files.ErrNotReader)
+			serverWebError(w, files.ErrNotReader)
 			return
 		}
 
@@ -82,7 +82,7 @@ func (i *handler) serveDirectory(ctx context.Context, w http.ResponseWriter, r *
 	case resolver.ErrNoLink:
 		logger.Debugw("no index.html; noop", "path", idxPath)
 	default:
-		internalWebError(w, err)
+		serverWebError(w, err)
 		return
 	}
 
@@ -111,14 +111,14 @@ func (i *handler) serveDirectory(ctx context.Context, w http.ResponseWriter, r *
 
 	results, err := i.api.LsUnixFsDir(ctx, resolvedPath)
 	if err != nil {
-		internalWebError(w, err)
+		serverWebError(w, err)
 		return
 	}
 
 	dirListing := make([]assets.DirectoryItem, 0, len(results))
 	for link := range results {
 		if link.Err != nil {
-			internalWebError(w, link.Err)
+			serverWebError(w, link.Err)
 			return
 		}
 
@@ -194,7 +194,7 @@ func (i *handler) serveDirectory(ctx context.Context, w http.ResponseWriter, r *
 	logger.Debugw("request processed", "tplDataDNSLink", dnslink, "tplDataSize", size, "tplDataBackLink", backLink, "tplDataHash", hash)
 
 	if err := assets.DirectoryTemplate.Execute(w, tplData); err != nil {
-		internalWebError(w, err)
+		serverWebError(w, err)
 		return
 	}
 

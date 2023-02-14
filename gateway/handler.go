@@ -571,9 +571,8 @@ func webErrorWithCode(w http.ResponseWriter, message string, err error, code int
 	}
 }
 
-// return a 500 error and log
-func internalWebError(w http.ResponseWriter, err error) {
-	webErrorWithCode(w, "internalWebError", err, http.StatusInternalServerError)
+func serverWebError(w http.ResponseWriter, err error) {
+	webError(w, "server error", err, http.StatusInternalServerError)
 }
 
 func getFilename(contentPath ipath.Path) string {
