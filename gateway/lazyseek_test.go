@@ -31,42 +31,32 @@ func TestLazySeekerError(t *testing.T) {
 	}
 	off, err := s.Seek(0, io.SeekEnd)
 	assert.Nil(t, err)
-	assert.Equalf(t, s.size, off, "expected to seek to the end")
+	assert.Equal(t, s.size, off, "expected to seek to the end")
 
 	// shouldn't have actually seeked.
 	b, err := io.ReadAll(s)
 	assert.Nil(t, err)
-	assert.Equalf(t, 0, len(b), "expected to read nothing")
+	assert.Equal(t, 0, len(b), "expected to read nothing")
 
 	// shouldn't need to actually seek.
 	off, err = s.Seek(0, io.SeekStart)
 	assert.Nil(t, err)
-	if off != 0 {
-		t.Fatal("expected to seek to the start")
-	}
+	assert.Equal(t, int64(0), off, "expected to seek to the start")
+
 	b, err = io.ReadAll(s)
 	assert.Nil(t, err)
-	if string(b) != "fubar" {
-		t.Fatal("expected to read string")
-	}
+	assert.Equal(t, "fubar", string(b), "expected to read string")
 
 	// should fail the second time.
 	off, err = s.Seek(0, io.SeekStart)
 	assert.Nil(t, err)
-	if off != 0 {
-		t.Fatal("expected to seek to the start")
-	}
+	assert.Equal(t, int64(0), off, "expected to seek to the start")
+
 	// right here...
 	b, err = io.ReadAll(s)
-	if err == nil {
-		t.Fatalf("expected an error, got output %s", string(b))
-	}
-	if err != errBadSeek {
-		t.Fatalf("expected a bad seek error, got %s", err)
-	}
-	if len(b) != 0 {
-		t.Fatalf("expected to read nothing")
-	}
+	assert.NotNil(t, err)
+	assert.Equal(t, errBadSeek, err)
+	assert.Equal(t, 0, len(b), "expected to read nothing")
 }
 
 func TestLazySeeker(t *testing.T) {
@@ -80,36 +70,24 @@ func TestLazySeeker(t *testing.T) {
 		var buf [1]byte
 		n, err := io.ReadFull(s, buf[:])
 		assert.Nil(t, err)
-		if n != 1 {
-			t.Fatalf("expected to read one byte, read %d", n)
-		}
-		if buf[0] != b {
-			t.Fatalf("expected %b, got %b", b, buf[0])
-		}
+		assert.Equal(t, 1, n, "expected to read one byte, read %d", n)
+		assert.Equal(t, b, buf[0])
 	}
 	expectSeek := func(whence int, off, expOff int64, expErr string) {
 		t.Helper()
 		n, err := s.Seek(off, whence)
 		if expErr == "" {
-			if err != nil {
-				t.Fatal("unexpected seek error: ", err)
-			}
+			assert.Nil(t, err)
 		} else {
-			if err == nil || err.Error() != expErr {
-				t.Fatalf("expected %s, got %s", err, expErr)
-			}
+			assert.EqualError(t, err, expErr)
 		}
-		if n != expOff {
-			t.Fatalf("expected offset %d, got, %d", expOff, n)
-		}
+		assert.Equal(t, expOff, n)
 	}
 
 	expectSeek(io.SeekEnd, 0, s.size, "")
 	b, err := io.ReadAll(s)
 	assert.Nil(t, err)
-	if len(b) != 0 {
-		t.Fatal("expected to read nothing")
-	}
+	assert.Equal(t, 0, len(b), "expected to read nothing")
 	expectSeek(io.SeekEnd, -1, s.size-1, "")
 	expectByte('r')
 	expectSeek(io.SeekStart, 0, 0, "")
