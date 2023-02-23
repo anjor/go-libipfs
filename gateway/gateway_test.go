@@ -40,6 +40,7 @@ import (
 	"github.com/ipld/go-ipld-prime/schema"
 	"github.com/libp2p/go-libp2p/core/crypto"
 	"github.com/libp2p/go-libp2p/core/routing"
+	"github.com/stretchr/testify/assert"
 )
 
 type mockNamesys map[string]path.Path
@@ -96,14 +97,10 @@ type mockAPI struct {
 
 func newMockAPI(t *testing.T) (*mockAPI, cid.Cid) {
 	r, err := os.Open("./testdata/fixtures.car")
-	if err != nil {
-		t.Fatal(err)
-	}
+	assert.Nil(t, err)
 
 	blockStore, err := carblockstore.NewReadOnly(r, nil)
-	if err != nil {
-		t.Fatal(err)
-	}
+	assert.Nil(t, err)
 
 	t.Cleanup(func() {
 		blockStore.Close()
@@ -111,13 +108,8 @@ func newMockAPI(t *testing.T) (*mockAPI, cid.Cid) {
 	})
 
 	cids, err := blockStore.Roots()
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if len(cids) != 1 {
-		t.Fatal(fmt.Errorf("car has %d roots, expected 1", len(cids)))
-	}
+	assert.Nil(t, err)
+	assert.Equalf(t, 1, len(cids), "car has %d roots, expected 1", len(cids))
 
 	blockService := blockservice.New(blockStore, offline.Exchange(blockStore))
 	dagService := merkledag.NewDAGService(blockService)
@@ -321,9 +313,7 @@ func TestGatewayGet(t *testing.T) {
 	defer cancel()
 
 	k, err := api.ResolvePath(ctx, ipath.Join(ipath.IpfsPath(root), t.Name(), "fnord"))
-	if err != nil {
-		t.Fatal(err)
-	}
+	assert.Nil(t, err)
 
 	api.namesys["/ipns/example.com"] = path.FromCid(k.Cid())
 	api.namesys["/ipns/working.example.com"] = path.FromString(k.String())
@@ -365,9 +355,7 @@ func TestGatewayGet(t *testing.T) {
 	} {
 		var c http.Client
 		r, err := http.NewRequest(http.MethodGet, ts.URL+test.path, nil)
-		if err != nil {
-			t.Fatal(err)
-		}
+		assert.Nil(t, err)
 		r.Host = test.host
 		resp, err := c.Do(r)
 
@@ -425,13 +413,10 @@ func TestUriQueryRedirect(t *testing.T) {
 	} {
 
 		r, err := http.NewRequest(http.MethodGet, ts.URL+test.path, nil)
-		if err != nil {
-			t.Fatal(err)
-		}
+		assert.Nil(t, err)
+
 		resp, err := doWithoutRedirect(r)
-		if err != nil {
-			t.Fatal(err)
-		}
+		assert.Nil(t, err)
 		defer resp.Body.Close()
 
 		if resp.StatusCode != test.status {
@@ -453,24 +438,18 @@ func TestIPNSHostnameRedirect(t *testing.T) {
 	defer cancel()
 
 	k, err := api.ResolvePath(ctx, ipath.Join(ipath.IpfsPath(root), t.Name()))
-	if err != nil {
-		t.Fatal(err)
-	}
+	assert.Nil(t, err)
 
 	t.Logf("k: %s\n", k)
 	api.namesys["/ipns/example.net"] = path.FromString(k.String())
 
 	// make request to directory containing index.html
 	req, err := http.NewRequest(http.MethodGet, ts.URL+"/foo", nil)
-	if err != nil {
-		t.Fatal(err)
-	}
+	assert.Nil(t, err)
 	req.Host = "example.net"
 
 	res, err := doWithoutRedirect(req)
-	if err != nil {
-		t.Fatal(err)
-	}
+	assert.Nil(t, err)
 
 	// expect 301 redirect to same path, but with trailing slash
 	if res.StatusCode != 301 {
@@ -485,15 +464,11 @@ func TestIPNSHostnameRedirect(t *testing.T) {
 
 	// make request with prefix to directory containing index.html
 	req, err = http.NewRequest(http.MethodGet, ts.URL+"/foo", nil)
-	if err != nil {
-		t.Fatal(err)
-	}
+	assert.Nil(t, err)
 	req.Host = "example.net"
 
 	res, err = doWithoutRedirect(req)
-	if err != nil {
-		t.Fatal(err)
-	}
+	assert.Nil(t, err)
 
 	// expect 301 redirect to same path, but with prefix and trailing slash
 	if res.StatusCode != 301 {
@@ -508,15 +483,11 @@ func TestIPNSHostnameRedirect(t *testing.T) {
 
 	// make sure /version isn't exposed
 	req, err = http.NewRequest(http.MethodGet, ts.URL+"/version", nil)
-	if err != nil {
-		t.Fatal(err)
-	}
+	assert.Nil(t, err)
 	req.Host = "example.net"
 
 	res, err = doWithoutRedirect(req)
-	if err != nil {
-		t.Fatal(err)
-	}
+	assert.Nil(t, err)
 
 	if res.StatusCode != 404 {
 		t.Fatalf("expected a 404 error, got: %s", res.Status)
@@ -535,35 +506,25 @@ func TestIPNSHostnameBacklinks(t *testing.T) {
 	defer cancel()
 
 	k, err := api.ResolvePath(ctx, ipath.Join(ipath.IpfsPath(root), t.Name()))
-	if err != nil {
-		t.Fatal(err)
-	}
+	assert.Nil(t, err)
 
 	// create /ipns/example.net/foo/
 	k2, err := api.ResolvePath(ctx, ipath.Join(k, "foo? #<'"))
-	if err != nil {
-		t.Fatal(err)
-	}
+	assert.Nil(t, err)
 
 	k3, err := api.ResolvePath(ctx, ipath.Join(k, "foo? #<'/bar"))
-	if err != nil {
-		t.Fatal(err)
-	}
+	assert.Nil(t, err)
 
 	t.Logf("k: %s\n", k)
 	api.namesys["/ipns/example.net"] = path.FromString(k.String())
 
 	// make request to directory listing
 	req, err := http.NewRequest(http.MethodGet, ts.URL+"/foo%3F%20%23%3C%27/", nil)
-	if err != nil {
-		t.Fatal(err)
-	}
+	assert.Nil(t, err)
 	req.Host = "example.net"
 
 	res, err := doWithoutRedirect(req)
-	if err != nil {
-		t.Fatal(err)
-	}
+	assert.Nil(t, err)
 
 	// expect correct links
 	body, err := io.ReadAll(res.Body)
@@ -592,15 +553,11 @@ func TestIPNSHostnameBacklinks(t *testing.T) {
 
 	// make request to directory listing at root
 	req, err = http.NewRequest(http.MethodGet, ts.URL, nil)
-	if err != nil {
-		t.Fatal(err)
-	}
+	assert.Nil(t, err)
 	req.Host = "example.net"
 
 	res, err = doWithoutRedirect(req)
-	if err != nil {
-		t.Fatal(err)
-	}
+	assert.Nil(t, err)
 
 	// expect correct backlinks at root
 	body, err = io.ReadAll(res.Body)
@@ -629,15 +586,11 @@ func TestIPNSHostnameBacklinks(t *testing.T) {
 
 	// make request to directory listing
 	req, err = http.NewRequest(http.MethodGet, ts.URL+"/foo%3F%20%23%3C%27/bar/", nil)
-	if err != nil {
-		t.Fatal(err)
-	}
+	assert.Nil(t, err)
 	req.Host = "example.net"
 
 	res, err = doWithoutRedirect(req)
-	if err != nil {
-		t.Fatal(err)
-	}
+	assert.Nil(t, err)
 
 	// expect correct backlinks
 	body, err = io.ReadAll(res.Body)
@@ -669,9 +622,7 @@ func TestPretty404(t *testing.T) {
 	defer cancel()
 
 	k, err := api.ResolvePath(ctx, ipath.Join(ipath.IpfsPath(root), t.Name()))
-	if err != nil {
-		t.Fatal(err)
-	}
+	assert.Nil(t, err)
 
 	host := "example.net"
 	api.namesys["/ipns/"+host] = path.FromString(k.String())
@@ -694,9 +645,7 @@ func TestPretty404(t *testing.T) {
 	} {
 		var c http.Client
 		req, err := http.NewRequest("GET", ts.URL+test.path, nil)
-		if err != nil {
-			t.Fatal(err)
-		}
+		assert.Nil(t, err)
 		req.Header.Add("Accept", test.accept)
 		req.Host = host
 		resp, err := c.Do(req)
@@ -725,14 +674,10 @@ func TestCacheControlImmutable(t *testing.T) {
 	t.Logf("test server url: %s", ts.URL)
 
 	req, err := http.NewRequest(http.MethodGet, ts.URL+"/ipfs/"+root.String()+"/", nil)
-	if err != nil {
-		t.Fatal(err)
-	}
+	assert.Nil(t, err)
 
 	res, err := doWithoutRedirect(req)
-	if err != nil {
-		t.Fatal(err)
-	}
+	assert.Nil(t, err)
 
 	// check the immutable tag isn't set
 	hdrs, ok := res.Header["Cache-Control"]
@@ -751,14 +696,10 @@ func TestGoGetSupport(t *testing.T) {
 
 	// mimic go-get
 	req, err := http.NewRequest(http.MethodGet, ts.URL+"/ipfs/"+root.String()+"?go-get=1", nil)
-	if err != nil {
-		t.Fatal(err)
-	}
+	assert.Nil(t, err)
 
 	res, err := doWithoutRedirect(req)
-	if err != nil {
-		t.Fatal(err)
-	}
+	assert.Nil(t, err)
 
 	if res.StatusCode != 200 {
 		t.Errorf("status is %d, expected 200", res.StatusCode)

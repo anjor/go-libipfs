@@ -8,14 +8,13 @@ import (
 
 	cid "github.com/ipfs/go-cid"
 	path "github.com/ipfs/go-path"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestToSubdomainURL(t *testing.T) {
 	gwAPI, _ := newMockAPI(t)
 	testCID, err := cid.Decode("bafkqaglimvwgy3zakrsxg5cun5jxkyten5wwc2lokvjeycq")
-	if err != nil {
-		t.Fatal(err)
-	}
+	assert.Nil(t, err)
 
 	gwAPI.namesys["/ipns/dnslink.long-name.example.com"] = path.FromString(testCID.String())
 	gwAPI.namesys["/ipns/dnslink.too-long.f1siqrebi3vir8sab33hu5vcy008djegvay6atmz91ojesyjs8lx350b7y7i1nvyw2haytfukfyu2f2x4tocdrfa0zgij6p4zpl4u5o.example.com"] = path.FromString(testCID.String())
@@ -91,9 +90,7 @@ func TestToDNSLinkFQDN(t *testing.T) {
 		{"dnslink-long--name-example-com", "dnslink.long-name.example.com"},
 	} {
 		out := toDNSLinkFQDN(test.in)
-		if out != test.out {
-			t.Errorf("(%s) returned (%s), expected (%s)", test.in, out, test.out)
-		}
+		assert.Equalf(t, test.out, out, "(%s)", test.in)
 	}
 }
 
@@ -116,9 +113,7 @@ func TestIsHTTPSRequest(t *testing.T) {
 		{oddballRequest, false},
 	} {
 		out := isHTTPSRequest(test.in)
-		if out != test.out {
-			t.Errorf("(%+v): returned %t, expected %t", test.in, out, test.out)
-		}
+		assert.Equalf(t, test.out, out, "(%+v)", test.in)
 	}
 }
 
@@ -134,9 +129,7 @@ func TestHasPrefix(t *testing.T) {
 		{[]string{"/version"}, "/version", true},
 	} {
 		out := hasPrefix(test.path, test.prefixes...)
-		if out != test.out {
-			t.Errorf("(%+v, %s) returned '%t', expected '%t'", test.prefixes, test.path, out, test.out)
-		}
+		assert.Equalf(t, test.out, out, "(%+v, %s)", test.prefixes, test.path)
 	}
 }
 
@@ -153,9 +146,7 @@ func TestIsDomainNameAndNotPeerID(t *testing.T) {
 		{"k51qzi5uqu5di608geewp3nqkg0bpujoasmka7ftkyxgcm3fh1aroup0gsdrna", false}, // valid peerid
 	} {
 		out := isDomainNameAndNotPeerID(test.hostname)
-		if out != test.out {
-			t.Errorf("(%s) returned '%t', expected '%t'", test.hostname, out, test.out)
-		}
+		assert.Equalf(t, test.out, out, "(%s)", test.hostname)
 	}
 }
 
@@ -173,9 +164,7 @@ func TestPortStripping(t *testing.T) {
 		{"[::1]:8080", "::1"},
 	} {
 		out := stripPort(test.in)
-		if out != test.out {
-			t.Errorf("(%s): returned '%s', expected '%s'", test.in, out, test.out)
-		}
+		assert.Equalf(t, test.out, out, "(%s)", test.in)
 	}
 }
 
@@ -275,23 +264,12 @@ func TestKnownSubdomainDetails(t *testing.T) {
 		{"bafkreicysg23kiwv34eg2d7qweipxwosdo2py4ldv42nbauguluen5v6am.ipfs.sub1.sub2.wildcard2.tld", gwWildcard2, "sub1.sub2.wildcard2.tld", "ipfs", "bafkreicysg23kiwv34eg2d7qweipxwosdo2py4ldv42nbauguluen5v6am", true},
 	} {
 		gw, hostname, ns, rootID, ok := gateways.knownSubdomainDetails(test.hostHeader)
-		if ok != test.ok {
-			t.Errorf("knownSubdomainDetails(%s): ok is %t, expected %t", test.hostHeader, ok, test.ok)
-		}
-		if rootID != test.rootID {
-			t.Errorf("knownSubdomainDetails(%s): rootID is '%s', expected '%s'", test.hostHeader, rootID, test.rootID)
-		}
-		if ns != test.ns {
-			t.Errorf("knownSubdomainDetails(%s): ns is '%s', expected '%s'", test.hostHeader, ns, test.ns)
-		}
-		if hostname != test.hostname {
-			t.Errorf("knownSubdomainDetails(%s): hostname is '%s', expected '%s'", test.hostHeader, hostname, test.hostname)
-		}
-		if gw != test.gw {
-			t.Errorf("knownSubdomainDetails(%s): gw is  %+v, expected %+v", test.hostHeader, gw, test.gw)
-		}
+		assert.Equalf(t, test.ok, ok, "knownSubdomainDetails(%s)", test.hostHeader)
+		assert.Equalf(t, test.rootID, rootID, "knownSubdomainDetails(%s)", test.hostHeader)
+		assert.Equalf(t, test.ns, ns, "knownSubdomainDetails(%s)", test.hostHeader)
+		assert.Equalf(t, test.hostname, hostname, "knownSubdomainDetails(%s)", test.hostHeader)
+		assert.Equalf(t, test.gw, gw, "knownSubdomainDetails(%s)", test.hostHeader)
 	}
-
 }
 
 func equalError(a, b error) bool {

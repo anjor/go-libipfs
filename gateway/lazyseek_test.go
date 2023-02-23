@@ -5,6 +5,8 @@ import (
 	"io"
 	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 type badSeeker struct {
@@ -28,43 +30,29 @@ func TestLazySeekerError(t *testing.T) {
 		size:   underlyingBuffer.Size(),
 	}
 	off, err := s.Seek(0, io.SeekEnd)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if off != s.size {
-		t.Fatal("expected to seek to the end")
-	}
+	assert.Nil(t, err)
+	assert.Equalf(t, s.size, off, "expected to seek to the end")
 
 	// shouldn't have actually seeked.
 	b, err := io.ReadAll(s)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if len(b) != 0 {
-		t.Fatal("expected to read nothing")
-	}
+	assert.Nil(t, err)
+	assert.Equalf(t, 0, len(b), "expected to read nothing")
 
 	// shouldn't need to actually seek.
 	off, err = s.Seek(0, io.SeekStart)
-	if err != nil {
-		t.Fatal(err)
-	}
+	assert.Nil(t, err)
 	if off != 0 {
 		t.Fatal("expected to seek to the start")
 	}
 	b, err = io.ReadAll(s)
-	if err != nil {
-		t.Fatal(err)
-	}
+	assert.Nil(t, err)
 	if string(b) != "fubar" {
 		t.Fatal("expected to read string")
 	}
 
 	// should fail the second time.
 	off, err = s.Seek(0, io.SeekStart)
-	if err != nil {
-		t.Fatal(err)
-	}
+	assert.Nil(t, err)
 	if off != 0 {
 		t.Fatal("expected to seek to the start")
 	}
@@ -91,9 +79,7 @@ func TestLazySeeker(t *testing.T) {
 		t.Helper()
 		var buf [1]byte
 		n, err := io.ReadFull(s, buf[:])
-		if err != nil {
-			t.Fatal(err)
-		}
+		assert.Nil(t, err)
 		if n != 1 {
 			t.Fatalf("expected to read one byte, read %d", n)
 		}
@@ -120,9 +106,7 @@ func TestLazySeeker(t *testing.T) {
 
 	expectSeek(io.SeekEnd, 0, s.size, "")
 	b, err := io.ReadAll(s)
-	if err != nil {
-		t.Fatal(err)
-	}
+	assert.Nil(t, err)
 	if len(b) != 0 {
 		t.Fatal("expected to read nothing")
 	}
