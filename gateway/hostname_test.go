@@ -56,11 +56,9 @@ func TestToSubdomainURL(t *testing.T) {
 		{httpRequest, "localhost", true, "/ipns/dnslink.long-name.example.com", "http://dnslink-long--name-example-com.ipns.localhost/", nil},
 		{httpRequest, "dweb.link", true, "/ipns/dnslink.long-name.example.com", "http://dnslink-long--name-example-com.ipns.dweb.link/", nil},
 	} {
-
 		url, err := toSubdomainURL(test.gwHostname, test.path, test.request, test.inlineDNSLink, gwAPI)
-		if url != test.url || !equalError(err, test.err) {
-			t.Errorf("(%s, %v, %s) returned (%s, %v), expected (%s, %v)", test.gwHostname, test.inlineDNSLink, test.path, url, err, test.url, test.err)
-		}
+		assert.Equalf(t, test.url, url, "(%s, %v, %s)", test.gwHostname, test.inlineDNSLink, test.path)
+		assert.Equalf(t, test.err, err, "(%s, %v, %s)", test.gwHostname, test.inlineDNSLink, test.path)
 	}
 }
 
@@ -74,9 +72,8 @@ func TestToDNSLinkDNSLabel(t *testing.T) {
 		{"dnslink.too-long.f1siqrebi3vir8sab33hu5vcy008djegvay6atmz91ojesyjs8lx350b7y7i1nvyw2haytfukfyu2f2x4tocdrfa0zgij6p4zpl4u5o.example.com", "", errors.New("DNSLink representation incompatible with DNS label length limit of 63: dnslink-too--long-f1siqrebi3vir8sab33hu5vcy008djegvay6atmz91ojesyjs8lx350b7y7i1nvyw2haytfukfyu2f2x4tocdrfa0zgij6p4zpl4u5o-example-com")},
 	} {
 		out, err := toDNSLinkDNSLabel(test.in)
-		if out != test.out || !equalError(err, test.err) {
-			t.Errorf("(%s) returned (%s, %v), expected (%s, %v)", test.in, out, err, test.out, test.err)
-		}
+		assert.Equalf(t, test.out, out, "(%s)", test.in)
+		assert.Equalf(t, test.err, err, "(%s)", test.in)
 	}
 }
 
@@ -185,11 +182,9 @@ func TestToDNSLabel(t *testing.T) {
 	} {
 		inCID, _ := cid.Decode(test.in)
 		out, err := toDNSLabel(test.in, inCID)
-		if out != test.out || !equalError(err, test.err) {
-			t.Errorf("(%s): returned (%s, %v) expected (%s, %v)", test.in, out, err, test.out, test.err)
-		}
+		assert.Equalf(t, test.out, out, "(%s)", test.in)
+		assert.Equalf(t, test.err, err, "(%s)", test.in)
 	}
-
 }
 
 func TestKnownSubdomainDetails(t *testing.T) {
@@ -270,8 +265,4 @@ func TestKnownSubdomainDetails(t *testing.T) {
 		assert.Equalf(t, test.hostname, hostname, "knownSubdomainDetails(%s)", test.hostHeader)
 		assert.Equalf(t, test.gw, gw, "knownSubdomainDetails(%s)", test.hostHeader)
 	}
-}
-
-func equalError(a, b error) bool {
-	return (a == nil && b == nil) || (a != nil && b != nil && a.Error() == b.Error())
 }
